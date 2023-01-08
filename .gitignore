@@ -1,0 +1,38 @@
+./backend/.env
+./backend/FirebaseServiceKey.json
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+./frontend/letschat/node_modules
+./frontend/letschat/.pnp
+./frontend/letschat/.pnp.js
+
+# testing
+./frontend/letschat/coverage
+
+# next.js
+./frontend/letschat/.next/
+./frontend/letschat/out/
+
+# production
+./frontend/letschat/build
+
+# misc
+./frontend/letschat/.DS_Store
+.frontend/letschat/*.pem
+
+# debug
+./frontend/letschat/npm-debug.log*
+./frontend/letschat/yarn-debug.log*
+./frontend/letschat/yarn-error.log*
+./frontend/letschat/.pnpm-debug.log*
+
+# local env files
+./frontend/letschat.env*.local
+
+# vercel
+./frontend/letschat.vercel
+
+# typescript
+./frontend/letschat*.tsbuildinfo
+./frontend/letschatnext-env.d.ts
