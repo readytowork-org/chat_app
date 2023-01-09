@@ -31,7 +31,6 @@ func (cr CrudRoutes) Setup() {
 
 		crud.POST("", cr.crudController.CreateData)
 		crud.GET("", cr.crudController.GetData)
-		crud.DELETE("", cr.crudController.UpdateData)
-		crud.PUT("", cr.crudController.UpdateData)
+		crud.DELETE("", cr.crudController.DeleteData)
 	}
 }

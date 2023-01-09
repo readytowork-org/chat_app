@@ -56,6 +56,23 @@ func (cc CrudController) CreateData(ctx *gin.Context) {
 	return
 }
 
-func (cc CrudController) UpdateData(ctx *gin.Context) {}
+func (cc CrudController) GetData(ctx *gin.Context) {
+
+	uUID := ctx.MustGet("UUID")
+	ref := cc.db.DB.NewRef("details/" + fmt.Sprint(uUID))
+	var details models.UserDetails
+
+	// get database reference to user score
+
+	// read from user_scores using ref
+	if err := ref.Get(context.TODO(), &details); err != nil {
+		log.Fatalln("error in reading from firebase DB: ", err)
+	}
+	fmt.Println("retrieved user's score is: ", details)
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg":  "user retreived",
+		"data": details,
+	})
+
+}
 func (cc CrudController) DeleteData(ctx *gin.Context) {}
-func (cc CrudController) GetData(ctx *gin.Context)    {}
