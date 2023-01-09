@@ -8,3 +8,8 @@ type FirebaseAuthUser struct {
 	Enabled     int    `json:"enabled"`
 	UserId      string `json:"user_id"`
 }
+
+type UserDetails struct {
+	Address     string `json:"address"`
+	PhoneNumber string `json:"Phone"`
+}

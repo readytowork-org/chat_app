@@ -3,7 +3,7 @@ package infrastructure
 import (
 	"net/http"
 
-	"firebase.google.com/go/auth"
+	"firebase.google.com/go/v4/auth"
 	"github.com/gin-gonic/gin"
 )
 

@@ -5,7 +5,7 @@ import (
 	"letschat/infrastructure"
 	"letschat/models"
 
-	"firebase.google.com/go/auth"
+	"firebase.google.com/go/v4/auth"
 )
 
 type FirebaseService struct {
@@ -39,18 +39,12 @@ func (fb *FirebaseService) GetUser(uid string) (*auth.UserRecord, error) {
 }
 
 func (fb *FirebaseService) CreateUser(newUser models.FirebaseAuthUser) (string, error) {
-	fb.logger.Zap.Error("am i here")
 	params := (&auth.UserToCreate{}).
 		Email(newUser.Email).
 		Password(newUser.Password).
-		DisplayName(newUser.DisplayName)
-	fb.logger.Zap.Info("password", newUser.Password)
-	if newUser.Enabled == 0 {
-		params = params.Disabled(true)
-	}
-	if newUser.Enabled == 1 {
-		params = params.Disabled(false)
-	}
+		DisplayName(newUser.DisplayName).
+		Disabled(false)
+
 	u, err := fb.fbAuth.CreateUser(context.Background(), params)
 	if err != nil {
 		return "", err
@@ -64,7 +58,11 @@ func (fb *FirebaseService) CreateUser(newUser models.FirebaseAuthUser) (string, 
 	if err != nil {
 		return "Internal Server Error", err
 	}
-	return u.DisplayName, err
+	tokens, err := fb.CreateCustomToken(u.UID)
+	if err != nil {
+		return "Error Getting tokens", nil
+	}
+	return tokens, err
 }
 
 func (fb *FirebaseService) GetUserByEmail(email string) string {
@@ -77,6 +75,7 @@ func (fb *FirebaseService) GetUserByEmail(email string) string {
 
 func (fb *FirebaseService) LoginUser(user models.FirebaseAuthUser) (string, error) {
 	uid := fb.GetUserByEmail(user.Email)
+	fb.logger.Zap.Info("this is uid ", uid)
 	if len(uid) == 0 {
 		return "Invalid Email", nil
 	}

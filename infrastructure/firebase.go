@@ -2,27 +2,31 @@ package infrastructure
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/auth"
-	"firebase.google.com/go/db"
+	firebase "firebase.google.com/go/v4"
+	"firebase.google.com/go/v4/auth"
+	"firebase.google.com/go/v4/db"
 	"google.golang.org/api/option"
 )
 
-func NewFBCredentials(logger Logger) (context.Context, option.ClientOption) {
+type Database struct {
+	DB *db.Client
+}
+
+// NewFBApp creates new firebase app instance
+func NewFBApp(logger Logger) *firebase.App {
 	ctx := context.Background()
 	serviceAccountKeyFilePath, err := filepath.Abs("./FirebaseSevicekey.json")
 	if err != nil {
 		logger.Zap.Panic("Unable to load serviceAccountKey.json file")
 	}
 	opt := option.WithCredentialsFile(serviceAccountKeyFilePath)
-	return ctx, opt
-}
-
-// NewFBApp creates new firebase app instance
-func NewFBApp(logger Logger, ctx  opt option.ClientOption) *firebase.App {
-	app, err := firebase.NewApp(ctx, nil, opt)
+	conf := &firebase.Config{
+		DatabaseURL: "https://letschat-c3e14-default-rtdb.asia-southeast1.firebasedatabase.app",
+	}
+	app, err := firebase.NewApp(ctx, conf, opt)
 	if err != nil {
 		logger.Zap.Fatalf("Firebase NewApp: %v", err)
 	}
@@ -36,15 +40,19 @@ func NewFBAuth(logger Logger, app *firebase.App) *auth.Client {
 	defer cancel()
 	firebaseAuth, err := app.Auth(ctx)
 	if err != nil {
-		logger.Zap.Fatalf("Firebase Authentication: %v", err)
+		logger.Zap.Fatal("Firebase Authentication: %v", err)
 	}
 	return firebaseAuth
 }
 
-func NewDatabase(logger Logger, app *firebase.App) *db.Client {
+func NewFBDatabase(logger Logger, app *firebase.App) Database {
+	fmt.Print(app, "adaldflkajdflkajl")
+	logger.Zap.Info(app)
 	client, err := app.Database(context.Background())
 	if err != nil {
 		logger.Zap.Error("Error in creating FB database client", err)
 	}
-	return client
+	return Database{
+		DB: client,
+	}
 }

@@ -7,6 +7,7 @@ import (
 var Module = fx.Options(
 	fx.Provide(NewRoutes),
 	fx.Provide(NewFirebaseRoutes),
+	fx.Provide(NewCrudRoutes),
 )
 
 type Routes []Route
@@ -17,9 +18,11 @@ type Route interface {
 
 func NewRoutes(
 	firebaseRoutes FirebaseRoutes,
+	crudRoutes CrudRoutes,
 ) Routes {
 	return Routes{
 		firebaseRoutes,
+		crudRoutes,
 	}
 }
 

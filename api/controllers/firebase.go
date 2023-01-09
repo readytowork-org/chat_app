@@ -30,7 +30,7 @@ func (fc FirebaseController) CreateUser(ctx *gin.Context) {
 		msg := "Error validating user input"
 		fc.logger.Zap.Info(msg, err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err,
+			"error":   err.Error(),
 			"message": msg,
 		})
 		return
@@ -41,7 +41,7 @@ func (fc FirebaseController) CreateUser(ctx *gin.Context) {
 		msg := "Error validating user input"
 		fc.logger.Zap.Info(msg, err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err,
+			"error":   err.Error(),
 			"message": msg,
 		})
 		return
@@ -59,7 +59,7 @@ func (fc FirebaseController) LoginUser(ctx *gin.Context) {
 		msg := "Error validating user input"
 		fc.logger.Zap.Info(msg, err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err,
+			"error":   err.Error(),
 			"message": msg,
 		})
 		return
@@ -70,7 +70,7 @@ func (fc FirebaseController) LoginUser(ctx *gin.Context) {
 		msg := "Error validating user input"
 		fc.logger.Zap.Info(msg, err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   err,
+			"error":   err.Error(),
 			"message": msg,
 		})
 		return
