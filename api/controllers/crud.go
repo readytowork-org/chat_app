@@ -68,11 +68,23 @@ func (cc CrudController) GetData(ctx *gin.Context) {
 	if err := ref.Get(context.TODO(), &details); err != nil {
 		log.Fatalln("error in reading from firebase DB: ", err)
 	}
-	fmt.Println("retrieved user's score is: ", details)
 	ctx.JSON(http.StatusOK, gin.H{
 		"msg":  "user retreived",
 		"data": details,
 	})
 
 }
-func (cc CrudController) DeleteData(ctx *gin.Context) {}
+func (cc CrudController) DeleteData(ctx *gin.Context) {
+
+	uUID := ctx.MustGet("UUID")
+	ref := cc.db.DB.NewRef("details/" + fmt.Sprint(uUID))
+
+	if err := ref.Delete(context.TODO()); err != nil {
+		log.Fatalln("error in deleting ref: ", err)
+	}
+	fmt.Println("user's score deleted successfully:)")
+	msg := fmt.Sprintf("user of uuid deleted %v", uUID)
+	ctx.JSON(http.StatusOK, gin.H{
+		"msg": msg,
+	})
+}
