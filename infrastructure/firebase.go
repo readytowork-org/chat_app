@@ -2,23 +2,21 @@ package infrastructure
 
 import (
 	"context"
-	"fmt"
+	
 	"path/filepath"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
-	"firebase.google.com/go/v4/db"
+	
 	"google.golang.org/api/option"
 )
 
-type Database struct {
-	DB *db.Client
-}
+
 
 // NewFBApp creates new firebase app instance
 func NewFBApp(logger Logger) *firebase.App {
 	ctx := context.Background()
-	serviceAccountKeyFilePath, err := filepath.Abs("./FirebaseSevicekey.json")
+	serviceAccountKeyFilePath, err := filepath.Abs("./serviceAccountKey.json")
 	if err != nil {
 		logger.Zap.Panic("Unable to load serviceAccountKey.json file")
 	}
@@ -45,14 +43,4 @@ func NewFBAuth(logger Logger, app *firebase.App) *auth.Client {
 	return firebaseAuth
 }
 
-func NewFBDatabase(logger Logger, app *firebase.App) Database {
-	fmt.Print(app, "adaldflkajdflkajl")
-	logger.Zap.Info(app)
-	client, err := app.Database(context.Background())
-	if err != nil {
-		logger.Zap.Error("Error in creating FB database client", err)
-	}
-	return Database{
-		DB: client,
-	}
-}
+

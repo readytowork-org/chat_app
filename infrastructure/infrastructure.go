@@ -8,5 +8,4 @@ var Module = fx.Options(
 	fx.Provide(NewEnv),
 	fx.Provide(NewLogger),
 	fx.Provide(NewRouter),
-	fx.Provide(NewFBDatabase),
 )

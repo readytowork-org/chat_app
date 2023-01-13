@@ -8,8 +8,8 @@ import (
 
 // Env has environment stored
 type Env struct {
-	ServerPort  string `mapstructure:"SERVER_PORT"`
-	Environment string `mapstructure:"ENVIRONMENT"`
+	ServerPort  string `mapstructure:"ServerPort"`
+	Environment string `mapstructure:"Environment"`
 }
 
 // NewEnv creates a new environment
