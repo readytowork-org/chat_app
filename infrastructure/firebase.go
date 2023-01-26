@@ -2,16 +2,14 @@ package infrastructure
 
 import (
 	"context"
-	
+
 	"path/filepath"
 
-	firebase "firebase.google.com/go/v4"
-	"firebase.google.com/go/v4/auth"
-	
+	firebase "firebase.google.com/go"
+	"firebase.google.com/go/auth"
+
 	"google.golang.org/api/option"
 )
-
-
 
 // NewFBApp creates new firebase app instance
 func NewFBApp(logger Logger) *firebase.App {
@@ -42,5 +40,3 @@ func NewFBAuth(logger Logger, app *firebase.App) *auth.Client {
 	}
 	return firebaseAuth
 }
-
-
