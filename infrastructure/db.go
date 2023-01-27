@@ -17,24 +17,19 @@ type Database struct {
 // NewDatabase creates a new database instance
 func NewDatabase(env Env, zapLogger Logger) Database {
 
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://mongo:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://chatapp:chatapp123@cluster0.g13tyt9.mongodb.net/?retryWrites=true&w=majority"))
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Connect(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer client.Disconnect(ctx)
-
-	// if err != nil {
-	// 	zapLogger.Zap.Info("Url: ", url)
-	// 	zapLogger.Zap.Panic(err)
-	// }
+	//defer client.Disconnect(ctx)
 
 	zapLogger.Zap.Info("Database connection established")
-
 	return Database{
 		DB: client.Database("chatApp"),
 	}
