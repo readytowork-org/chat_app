@@ -7,6 +7,7 @@ import (
 var Module = fx.Options(
 	fx.Provide(NewRoutes),
 	fx.Provide(NewThreadRoutes),
+	fx.Provide(NewUserRoutes),
 )
 
 type Routes []Route
@@ -17,10 +18,12 @@ type Route interface {
 
 func NewRoutes(
 	thread ThreadRoutes,
+	user UserRoutes,
 
 ) Routes {
 	return Routes{
 		thread,
+		user,
 	}
 }
 
