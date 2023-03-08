@@ -7,6 +7,7 @@ import (
 	"letschat/models"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type RoomRepository struct {
@@ -31,9 +32,11 @@ func (c RoomRepository) Create(room models.Room) error {
 	return nil
 }
 
-func (c RoomRepository) Update(id string, room models.Room) error {
+func (c RoomRepository) Update(id string, room models.RoomUpdate) error {
 	roomsCollection := c.db.DB.Collection("rooms")
-	filter := bson.M{"display_name": "kapil"}
+	objID, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"_id": objID}
+
 	update := bson.M{"$set": room}
 	_, err := roomsCollection.UpdateMany(context.TODO(), filter, update)
 	if err != nil {
@@ -45,7 +48,8 @@ func (c RoomRepository) Update(id string, room models.Room) error {
 
 func (c RoomRepository) Delete(id string) error {
 	roomsCollection := c.db.DB.Collection("rooms")
-	filter := bson.M{"room_id": id}
+	objID, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"_id": objID}
 	_, err := roomsCollection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		fmt.Println(err)
@@ -57,7 +61,11 @@ func (c RoomRepository) Delete(id string) error {
 func (c RoomRepository) FindOne(id string) (*models.Room, error) {
 	var room *models.Room
 	roomsCollection := c.db.DB.Collection("rooms")
-	filter := bson.M{"room_id": id}
+	objID, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"_id": objID}
+
+	as := fmt.Sprint(objID)
+	println(as)
 	err := roomsCollection.FindOne(context.TODO(), filter).Decode(&room)
 	if err != nil {
 		fmt.Println(err)
