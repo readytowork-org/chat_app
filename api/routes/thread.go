@@ -32,5 +32,5 @@ func (m ThreadRoutes) Setup() {
 	{
 		threads.GET("", m.threadController.ServeWs)
 	}
-
 }
+	
