@@ -8,6 +8,7 @@ import (
 	"letschat/api/routes"
 	"letschat/api/services"
 	infrastructure "letschat/infrastructure"
+	"letschat/socket"
 
 	"go.uber.org/fx"
 )
@@ -20,6 +21,7 @@ var Module = fx.Options(
 
 	services.Module,
 	repository.Module,
+	socket.Module,
 
 	fx.Invoke(bootstrap),
 )
@@ -31,6 +33,8 @@ func bootstrap(
 	database infrastructure.Database,
 	logger infrastructure.Logger,
 	env infrastructure.Env,
+	chatServer *socket.WsServer,
+
 ) {
 	appStop := func(context.Context) error {
 		logger.Zap.Info("Stopping Application")
