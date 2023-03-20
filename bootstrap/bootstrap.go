@@ -7,6 +7,7 @@ import (
 	"letschat/api/repository"
 	"letschat/api/routes"
 	"letschat/api/services"
+	"letschat/api/validators"
 	infrastructure "letschat/infrastructure"
 	"letschat/socket"
 
@@ -18,7 +19,7 @@ var Module = fx.Options(
 	infrastructure.Module,
 	routes.Module,
 	middlewares.Module,
-
+	validators.Module,
 	services.Module,
 	repository.Module,
 	socket.Module,
