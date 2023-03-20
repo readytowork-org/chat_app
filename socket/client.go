@@ -2,7 +2,6 @@ package socket
 
 import (
 	"encoding/json"
-	"fmt"
 	"letschat/api/helper"
 	"log"
 	"time"
@@ -14,13 +13,10 @@ import (
 const (
 	// Max wait time when writing message to peer
 	writeWait = 10 * time.Second
-
 	// Max time till next pong from peer
 	pongWait = 60 * time.Second
-
 	// Send ping interval, must be less then pong wait time
 	pingPeriod = (pongWait * 9) / 10
-
 	// Maximum message size allowed from peer.
 	maxMessageSize = 10000
 )
@@ -33,11 +29,11 @@ var (
 // client must send their own id whiler joing the room	q
 type Client struct {
 	ID       string `json:"id"`
-	Name     string `json:"name"`
 	wsServer *WsServer
 	Conn     *websocket.Conn
 	Send     chan []byte
 	rooms    map[*Room]bool //
+
 }
 
 func ServeWs(wsServer *WsServer, c *gin.Context) {
@@ -45,24 +41,25 @@ func ServeWs(wsServer *WsServer, c *gin.Context) {
 	if err != nil {
 		println("the errror is", err)
 	}
-	name := c.Query("name")
+	id := c.Query("id")
 
-	if len(name) < 1 {
-		log.Println("Url Param 'name' is missing")
+	if len(id) < 1 {
+		log.Println("Url Param 'Id' is missing")
 		return
 	}
-	client := *newClient(conn, wsServer, name)
+	client := *newClient(conn, wsServer, id)
+	// set the user status to online
+	// broadcast to all the users of the users room online message
 	wsServer.Register <- &client
+	//register clients to multiple room at a time
+	//get room from database and do
 	go client.writeMessage()
 	go client.readMessage()
-	fmt.Println(client)
 }
 
 func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
-
 	return &Client{
 		ID:       name,
-		Name:     name,
 		Conn:     conn,
 		rooms:    make(map[*Room]bool),
 		wsServer: wsServer,
@@ -109,7 +106,6 @@ func (client *Client) writeMessage() {
 				return
 			}
 			w.Write(message)
-
 			// Attach queued chat messages to the current websocket message.
 			n := len(client.Send)
 			for i := 0; i < n; i++ {
@@ -129,8 +125,8 @@ func (client *Client) writeMessage() {
 	}
 }
 
-func (client *Client) GetName() string {
-	return client.Name
+func (client *Client) GetId() string {
+	return client.ID
 }
 
 // disconnect client from the websocket server and all the rooms he/she was present in
@@ -139,8 +135,8 @@ func (client *Client) disconnect() {
 	for room := range client.rooms {
 		room.Unregister <- client
 	}
-
 }
+
 func (client *Client) findRoomByID(ID string) *Room {
 	var Room *Room
 	for room := range client.rooms {
@@ -158,10 +154,11 @@ func (client *Client) handleNewMessages(jsonMessage []byte) {
 		log.Printf("Error on unmarshal JSON message %s", err)
 		return
 	}
-	message.Sender = client.Name
+	message.Sender = client.ID
 
 	switch message.Action {
 	case SendMessageAction:
+		//save the message in database over here
 		client.handleSendMessage(message)
 
 	case JoinRoomAction:
@@ -170,6 +167,7 @@ func (client *Client) handleNewMessages(jsonMessage []byte) {
 	case LeaveRoomAction:
 		client.handleLeaveRoomMessage(message)
 	}
+	//  user online status message  to all the clients in the user room
 }
 
 func (client *Client) handleSendMessage(message Message) {
@@ -181,20 +179,38 @@ func (client *Client) handleSendMessage(message Message) {
 	room.Broadcast <- &message
 }
 
+// if there is no id  in the message then create a new room in the database
+// otherwise search the room in ws server using id and if there is not room
+// search the room in database if not found throw error
+// if found create a room in wsserver and join this client
+
+// there is another situation everytime when a user create a room . They create it with some user
+// so while there is no room id in it . it should gives us the clientid so that we know with
+// whom they want to create room
+// save another client with room in database and if another client is online then join the client in room
+
 func (client *Client) handleJoinRoomMessage(message Message) {
 	roomName := message.RoomId
 	client.joinRoom(roomName)
 }
+
+//there should be another create room function
+
 func (client *Client) joinRoom(roomName string) {
+
 	room := client.wsServer.findRoomByID(roomName)
 	if room == nil {
+
 		room = client.wsServer.createRoom(roomName, false)
 	}
+	//check if client is in the room (database)before or not
+	//if not add the room to this user
 	client.rooms[room] = true
 	room.Register <- client
 }
 
 func (client *Client) handleLeaveRoomMessage(message Message) {
+	// delete  this room from client in  the database
 	roomId := message.RoomId
 	room := client.wsServer.findRoomByID(roomId)
 	if _, ok := client.rooms[room]; ok {
@@ -210,3 +226,10 @@ func (client *Client) isInRoom(room *Room) bool {
 	}
 	return false
 }
+
+// todo
+func (client *Client) registerClientsToMultipleRoom() {
+	// get the room from database and register the room
+}
+
+// message read update -> to the databse and also to ther users  of that romm who are online

@@ -4,7 +4,6 @@ const welcomeMessage = "%s joined the room"
 
 type Room struct {
 	ID         string `json:"id"`
-	Name       string `json:"name"`
 	Private    bool   `json:"private"`
 	Clients    map[*Client]bool
 	Register   chan *Client
@@ -17,7 +16,6 @@ func NewRoom(name string, private bool) *Room {
 	return &Room{
 		ID:         name,
 		Private:    private,
-		Name:       name,
 		Clients:    make(map[*Client]bool),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
@@ -45,25 +43,25 @@ func (room *Room) GetId() string {
 	return room.ID
 }
 
-// get room name only if it is not the one on one room
-func (room *Room) GetName() string {
-	return room.Name
-}
-
 // register and notify others users
 func (room *Room) registerClientInRoom(client *Client) {
+	// check if the user is in the room alredy or not if not ?
+	// register clients in the database and register here
 	room.Clients[client] = true
 }
 
 // unregister client from the room
 func (room *Room) unregisterClientInRoom(client *Client) {
-	println("this is to runegister client in a room")
+	// delete this client from the room database
 	if _, ok := room.Clients[client]; ok {
 		delete(room.Clients, client)
 	}
 }
 
 func (room *Room) broadcastToClientsInRoom(message []byte, clientId string) {
+	// save this message to room
+	// broadcast to all online users
+	// get all client from the database and if some clients are not online than send them messages as notification when they are online
 
 	for client := range room.Clients {
 		if client.ID != clientId {

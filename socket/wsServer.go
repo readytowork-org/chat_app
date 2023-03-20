@@ -40,6 +40,8 @@ func (server *WsServer) registerClient(client *Client) {
 
 // Delete the clent from the server after it's is lost its connection
 func (server *WsServer) unregisterClient(client *Client) {
+	// broadcast its connectiion to all clients in room associated with this clients 
+	// make user status offline 
 	if _, ok := server.Client[client]; ok {
 		delete(server.Client, client)
 	}
@@ -47,6 +49,8 @@ func (server *WsServer) unregisterClient(client *Client) {
 
 // create room inside server
 // it should be changed to create by id method
+
+// create a room in database
 func (server *WsServer) createRoom(name string, private bool) *Room {
 	room := NewRoom(name, private)
 	go room.RunRoom()
@@ -56,16 +60,6 @@ func (server *WsServer) createRoom(name string, private bool) *Room {
 
 // all the created room are saved in server . This features
 // find room by name we may not need this later inted use search by id
-func (server *WsServer) findRoomByName(name string) *Room {
-	var foundRoom *Room
-	for room := range server.Rooms {
-		if room.Name == name {
-			foundRoom = room
-			break
-		}
-	}
-	return foundRoom
-}
 
 // To find room by id .To add clients there . leave clients and send message to the room clients.
 func (server *WsServer) findRoomByID(ID string) *Room {
