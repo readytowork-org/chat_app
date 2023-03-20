@@ -7,4 +7,5 @@ var Module = fx.Options(
 	fx.Provide(NewRoomController),
 	fx.Provide(NewMessageController),
 	fx.Provide(NewThreadController),
+	fx.Provide(NewJwtAuthController),
 )
