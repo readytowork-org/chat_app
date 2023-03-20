@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"letschat/api/services"
+	"letschat/api/validators"
 	"letschat/errors"
 	"letschat/infrastructure"
 	"letschat/models"
@@ -13,9 +14,10 @@ import (
 
 // UserController -> struct
 type UserController struct {
-	logger      infrastructure.Logger
-	env         infrastructure.Env
-	userService services.UserService
+	logger        infrastructure.Logger
+	env           infrastructure.Env
+	userService   services.UserService
+	userValidator validators.UserValidator
 }
 
 // NewUserController -> constructor
@@ -23,27 +25,54 @@ func NewUserController(
 	logger infrastructure.Logger,
 	env infrastructure.Env,
 	userService services.UserService,
+	userValidator validators.UserValidator,
 
 ) UserController {
 	return UserController{
-		logger:      logger,
-		env:         env,
-		userService: userService,
+		logger:        logger,
+		env:           env,
+		userService:   userService,
+		userValidator: userValidator,
 	}
 }
 
 func (cc UserController) Create(c *gin.Context) {
-	var user models.User
+	var user models.CreateUser
 	if err := c.ShouldBindJSON(&user); err != nil {
 		cc.logger.Zap.Error("Error creating user: [ShouldBingJSON]:", err.Error())
 		err = errors.BadRequest.Wrapf(err, "JSON Binding error")
 		responses.HandleError(c, err)
 		return
 	}
-
-	err := cc.userService.Create(user)
+	if validationErr := cc.userValidator.Validate.Struct(user); validationErr != nil {
+		err := errors.BadRequest.Wrap(validationErr, "Validation error")
+		err = errors.SetCustomMessage(err, "Invalid input information")
+		err = errors.AddErrorContextBlock(err, cc.userValidator.GenerateValidationResponse(validationErr))
+		responses.HandleError(c, err)
+		return
+	}
+	if user.Password != user.ConfirmPassword {
+		responses.ErrorJSON(c, http.StatusBadRequest, "Password and Confirm Password doesn't match")
+		return
+	}
+	_, exits, err := cc.userService.CheckUserWithPhone(user.PhoneNumber)
 	if err != nil {
-		cc.logger.Zap.Error("Error creating user: ", err.Error())
+		cc.logger.Zap.Error("Error while creating user: ", err.Error())
+		responses.HandleError(c, err)
+		return
+	}
+	if exits {
+		responses.ErrorJSON(c, http.StatusBadRequest, "User already exists")
+		return
+	}
+	err = user.BeforeCreate()
+	if err != nil {
+		cc.logger.Zap.Error("Error while encryptinh password: ", err.Error())
+		responses.HandleError(c, err)
+	}
+	err = cc.userService.Create(user)
+	if err != nil {
+		cc.logger.Zap.Error("Error while creating user: ", err.Error())
 		responses.HandleError(c, err)
 		return
 	}

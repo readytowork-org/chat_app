@@ -21,7 +21,7 @@ func NewUserService(
 	}
 }
 
-func (c UserService) Create(user models.User) error {
+func (c UserService) Create(user models.CreateUser) error {
 	return c.userrepository.Create(user)
 }
 
@@ -34,6 +34,10 @@ func (c UserService) Delete(id string) error {
 }
 func (c UserService) FindOne(id string) (*models.User, error) {
 	return c.userrepository.FindOne(id)
+}
+
+func (c UserService) CheckUserWithPhone(phone string) (*models.CreateUser, bool, error) {
+	return c.userrepository.CheckUserWithPhone(phone)
 }
 func (c UserService) FindAll() (*[]models.User, error) {
 	return c.userrepository.FindAll()
