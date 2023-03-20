@@ -6,12 +6,21 @@ require (
 	firebase.google.com/go/v4 v4.10.0
 	github.com/getsentry/sentry-go v0.16.0
 	github.com/gin-gonic/gin v1.8.2
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.14.0
 	go.mongodb.org/mongo-driver v1.11.1
 	go.uber.org/fx v1.18.2
 	go.uber.org/zap v1.24.0
+)
+
+require (
+	cloud.google.com/go v0.105.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
+	golang.org/x/time v0.1.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 )
 
 require (
@@ -65,7 +74,7 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
-	google.golang.org/api v0.105.0 // indirect
+	google.golang.org/api v0.105.0
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/appengine/v2 v2.0.2 // indirect
 	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef // indirect
