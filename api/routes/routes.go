@@ -6,8 +6,11 @@ import (
 
 var Module = fx.Options(
 	fx.Provide(NewRoutes),
-	fx.Provide(NewFirebaseRoutes),
-	fx.Provide(NewCrudRoutes),
+	fx.Provide(NewThreadRoutes),
+	fx.Provide(NewUserRoutes),
+	fx.Provide(NewRoomRoutes),
+	fx.Provide(NewMessageRoutes),
+	fx.Provide(NewObtainJwtTokenRoutes),
 )
 
 type Routes []Route
@@ -17,12 +20,19 @@ type Route interface {
 }
 
 func NewRoutes(
-	firebaseRoutes FirebaseRoutes,
-	crudRoutes CrudRoutes,
+	thread ThreadRoutes,
+	user UserRoutes,
+	room RoomRoutes,
+	messages MessageRoutes,
+	jwt ObtainJwtTokenRoutes,
+
 ) Routes {
 	return Routes{
-		firebaseRoutes,
-		crudRoutes,
+		thread,
+		user,
+		room,
+		messages,
+		jwt,
 	}
 }
 

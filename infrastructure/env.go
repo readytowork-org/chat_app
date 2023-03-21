@@ -8,8 +8,12 @@ import (
 
 // Env has environment stored
 type Env struct {
-	ServerPort  string `mapstructure:"SERVER_PORT"`
-	Environment string `mapstructure:"ENVIRONMENT"`
+	ServerPort               string `mapstructure:"SERVER_PORT"`
+	Environment              string `mapstructure:"ENVIRONNMENT"`
+	JwtAccessSecret          string `mapstructure:"JWT_ACCESS_SECRET"`
+	JwtRefreshSecret         string `mapstructure:"JWT_REFRESH_SECRET"`
+	JwtAccessTokenExpiresAt  int    `mapstructure:"JWT_ACCESS_TOKEN_EXPIRES_AT"`
+	JwtRefreshTokenExpiresAt int    `mapstructure:"JWT_REFRESH_TOKEN_EXPIRES_AT"`
 }
 
 // NewEnv creates a new environment
