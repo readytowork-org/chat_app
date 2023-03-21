@@ -28,6 +28,8 @@ jobs:
           name:  start the service
           command: | 
             ./main
+          background: true
+          
   
   deploy_to_develop:
     docker: 
