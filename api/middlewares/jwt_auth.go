@@ -45,7 +45,7 @@ func (m JWTAuthMiddleWare) Handle() gin.HandlerFunc {
 			return
 		}
 		// Parsing token
-		parsedToken, parseErr := m.jwtService.ParseToken(tokenString, m.env.JWT_ACCESS_SECRET)
+		parsedToken, parseErr := m.jwtService.ParseToken(tokenString, m.env.JwtAccessSecret)
 		if parseErr != nil {
 			m.logger.Zap.Error("Error parsing token: ", parseErr.Error())
 			err = errors.Unauthorized.Wrap(parseErr, "Something went wrong")
