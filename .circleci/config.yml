@@ -51,7 +51,7 @@ jobs:
       - run:
           name: test service key
           command: |
-            echo $GCLOUD_SERVICE_KEY | base64 --decode
+            echo ${GCLOUD_SERVICE_KEY} | base64 --decode
 
       - run:
           name: Authenticating and configuring the Google Cloud Platform
