@@ -78,6 +78,5 @@ workflows:
             branches:
               only:
                 - main
-                - /LEAR-.*/
           requires:
             - build
