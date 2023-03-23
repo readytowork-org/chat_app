@@ -1,0 +1,7 @@
+env: flex
+runtime: custom
+service: backend
+handlers:
+  - url: /.*
+    secure: always
+    script: auto
