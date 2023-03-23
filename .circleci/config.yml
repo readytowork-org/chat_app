@@ -52,7 +52,7 @@ jobs:
       - run:
           name: Authenticating and configuring the Google Cloud Platform
           command: |
-            echo $GCLOUD_SERVICE_KEY | base64 --decode | gcloud auth activate-service-account  $GCLOUD_SERVICE_ACCOUNT --key-file=.
+            echo $GCLOUD_SERVICE_KEY | base64 --decode | gcloud auth activate-service-account  $GCLOUD_SERVICE_ACCOUNT --key-file=-
             gcloud --quiet config set project ${GCLOUD_PROJECT_ID}
 
       - deploy:
