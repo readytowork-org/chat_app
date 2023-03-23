@@ -52,7 +52,7 @@ jobs:
       - run:
           name: Authenticating and configuring the Google Cloud Platform
           command: |
-            echo $GCLOUD_SERVICE_KEY | base64 --decode | gcloud auth activate-service-account --key-file=-
+            echo $GCLOUD_SERVICE_KEY | base64 --decode | gcloud auth activate-service-account $GCLOUD_SERVICE_ACCOUNT --key-file=-
             gcloud --quiet config set project ${GCLOUD_PROJECT_ID}
 
       - deploy:
@@ -66,7 +66,7 @@ workflows:
   dev_workflow:
     jobs:
       - build:
-          context: chatapp_dev
+          context: chat_app_dev
           filters:
             branches:
               only:
@@ -74,7 +74,7 @@ workflows:
                 - /LEAR-.*/
 
       - deploy_to_develop:
-          context: chatapp_dev
+          context: chat_app_dev
           filters:
             branches:
               only:
