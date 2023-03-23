@@ -13,6 +13,7 @@ jobs:
           command:  |
             echo "
               JWT_ACCESS_SECRET=$JWT_ACCESS_SECRET
+              SERVER_PORT=$SERVER_PORT
               JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET
               JWT_ACCESS_TOKEN_EXPIRES_AT=$JWT_ACCESS_TOKEN_EXPIRES_AT
               JWT_REFRESH_TOKEN_EXPIRES_AT=$JWT_REFRESH_TOKEN_EXPIRES_AT
@@ -41,7 +42,6 @@ jobs:
           name: Initialize Env file
           command:  |
             echo "
-              SERVER_PORT=$SERVER_PORT
               JWT_ACCESS_SECRET=$JWT_ACCESS_SECRET
               JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET
               JWT_ACCESS_TOKEN_EXPIRES_AT=$JWT_ACCESS_TOKEN_EXPIRES_AT
