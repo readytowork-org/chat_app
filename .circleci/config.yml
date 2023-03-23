@@ -51,7 +51,7 @@ jobs:
       - run:
           name: test service key
           command: |
-            echo $GCLOUD_SERVICE_KEY 
+            echo $GCLOUD_SERVICE_KEY  | base64 --decode
 
       - run:
           name: Authenticating and configuring the Google Cloud Platform
@@ -69,13 +69,13 @@ workflows:
   version: 2
   dev_workflow:
     jobs:
-      - build:
-          context: chat_app_dev
-          filters:
-            branches:
-              only:
-                - main
-                - /LEAR-.*/
+      # - build:
+      #     context: chat_app_dev
+      #     filters:
+      #       branches:
+      #         only:
+      #           - main
+      #           - /LEAR-.*/
 
       - deploy_to_develop:
           context: chat_app_dev
@@ -84,5 +84,5 @@ workflows:
               only:
                 - main
                 - /LEAR-.*/
-          requires:
-            - build
+          # requires:
+          #   - build
