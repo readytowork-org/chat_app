@@ -1,4 +1,4 @@
-env: standard
+env: flex
 runtime: go119
 service: backend
 handlers:
