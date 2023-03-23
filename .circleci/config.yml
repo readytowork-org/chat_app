@@ -52,8 +52,9 @@ jobs:
       - run:
           name: Authenticating and configuring the Google Cloud Platform
           command: |
-            echo $GCLOUD_SERVICE_KEY | base64 --decode | gcloud auth activate-service-account  --key-file=-
-            gcloud --quiet config set project ${GCLOUD_PROJECT_ID}
+            echo $GCLOUD_SERVICE_KEY | base64 --decode  > service.json 
+            gcloud auth activate-service-account  --key-file=service.json
+            gcloud --quiet config set project $GCLOUD_PROJECT_ID
 
       - deploy:
           name: Deploy to Google App Engine
