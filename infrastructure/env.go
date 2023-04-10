@@ -14,6 +14,7 @@ type Env struct {
 	JWT_REFRESH_SECRET           string `mapstructure:"JWT_REFRESH_SECRET"`
 	JWT_ACCESS_TOKEN_EXPIRES_AT  int    `mapstructure:"JWT_ACCESS_TOKEN_EXPIRES_AT"`
 	JWT_REFRESH_TOKEN_EXPIRES_AT int    `mapstructure:"JWT_REFRESH_TOKEN_EXPIRES_AT"`
+	StorageBucketName            string `mapstructure:"STORAGE_BUCKET_NAME"`
 }
 
 // NewEnv creates a new environment
