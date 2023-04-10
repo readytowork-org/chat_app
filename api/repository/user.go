@@ -38,7 +38,6 @@ func (c UserRepository) Update(id string, user models.UpdateUser) error {
 	usersCollection := c.db.DB.Collection("users")
 	objID, _ := primitive.ObjectIDFromHex(id)
 	filter := bson.M{"_id": objID}
-	println(filter)
 	update := bson.M{"$set": user}
 	result, err := usersCollection.UpdateMany(context.TODO(), filter, update)
 	if err != nil {
@@ -49,6 +48,49 @@ func (c UserRepository) Update(id string, user models.UpdateUser) error {
 		return errors.New("Cannot Update: No Document Found With The Id")
 	}
 	fmt.Println(result.ModifiedCount, "documents updated")
+	return nil
+}
+
+func (ur UserRepository) UpdateUserStatus(userId string, status bool) error {
+	usersCollection := ur.db.DB.Collection("users")
+	objID, _ := primitive.ObjectIDFromHex(userId)
+	filter := bson.M{"_id": objID}
+	update := bson.M{"$set": bson.M{"status": status}}
+	result, err := usersCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount == 0 {
+		return errors.New("Cannot Update: No Document Found With The Id")
+	}
+	return nil
+}
+
+func (c UserRepository) GetAllRooms(userId string) ([]string, error) {
+	var user *models.User
+	usersCollection := c.db.DB.Collection("users")
+	objID, _ := primitive.ObjectIDFromHex(userId)
+	filter := bson.M{"_id": objID}
+	err := usersCollection.FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return user.Rooms, nil
+}
+
+func (c UserRepository) UpdateRoom(userId string, rooms []string) error {
+	usersCollection := c.db.DB.Collection("users")
+	objID, _ := primitive.ObjectIDFromHex(userId)
+	filter := bson.M{"_id": objID}
+	update := bson.M{"$set": bson.M{"rooms": rooms}}
+	result, err := usersCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount == 0 {
+		return errors.New("Cannot Update: No Document Found With The Id")
+	}
 	return nil
 }
 
@@ -77,7 +119,7 @@ func (c UserRepository) FindOne(id string) (*models.User, error) {
 	err := usersCollection.FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, errors.New("Cannot Find User: No Document Found With The id")
+			return nil, err
 		}
 		return nil, err
 	}
