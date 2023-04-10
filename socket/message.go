@@ -6,18 +6,21 @@ import (
 )
 
 const SendMessageAction = "send-message"
+const DeleteMessageAction = "delete-message"
 const JoinRoomAction = "join-room"
 const LeaveRoomAction = "leave-room"
-const UserJoinedAction = "user-join"
-const UserLeftAction = "user-left"
-const JoinRoomPrivateAction = "join-room-private"
-const RoomJoinedAction = "room-joined"
+const CreateRoomAction = "create-room"
+const DeleteRoomAction = "delete-room"
 
+// todo message validation
 type Message struct {
-	Action  string `json:"action"`
-	Message string `json:"message"`
-	RoomId  string `json:"roomId"`
-	Sender  string `json:"sender"`
+	MessageId string   `json:"messageId"`
+	Action    string   `json:"action"`
+	Message   string   `json:"message"`
+	RoomId    string   `json:"roomId"`
+	Sender    string   `json:"sender"`
+	Members   []string `json:"members"`
+	Type      string   `json:"type"`
 }
 
 func (message *Message) encode() []byte {
