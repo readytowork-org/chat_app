@@ -2,3 +2,5 @@
 serviceAccoutKey.json
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 __debug_bin
+.gcloudignore
+main

@@ -1,0 +1,7 @@
+env: standard
+runtime: go119
+service: backend
+handlers:
+  - url: /.*
+    secure: always
+    script: auto
