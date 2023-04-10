@@ -2,12 +2,16 @@ package socket
 
 import (
 	"encoding/json"
+	"fmt"
 	"letschat/api/helper"
+	"letschat/api/services"
+	"letschat/models"
 	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
@@ -28,12 +32,14 @@ var (
 
 // client must send their own id whiler joing the room	q
 type Client struct {
-	ID       string `json:"id"`
-	wsServer *WsServer
-	Conn     *websocket.Conn
-	Send     chan []byte
-	rooms    map[*Room]bool //
-
+	ID             string `json:"id"`
+	wsServer       *WsServer
+	Conn           *websocket.Conn
+	Send           chan []byte
+	rooms          map[*Room]bool
+	userService    services.UserService
+	roomService    services.RoomService
+	messageService services.MessageService
 }
 
 func ServeWs(wsServer *WsServer, c *gin.Context) {
@@ -48,22 +54,23 @@ func ServeWs(wsServer *WsServer, c *gin.Context) {
 		return
 	}
 	client := *newClient(conn, wsServer, id)
-	// set the user status to online
-	// broadcast to all the users of the users room online message
 	wsServer.Register <- &client
-	//register clients to multiple room at a time
-	//get room from database and do
+	client.connect()
 	go client.writeMessage()
 	go client.readMessage()
 }
 
 func newClient(conn *websocket.Conn, wsServer *WsServer, name string) *Client {
+	//validate the client id
 	return &Client{
-		ID:       name,
-		Conn:     conn,
-		rooms:    make(map[*Room]bool),
-		wsServer: wsServer,
-		Send:     make(chan []byte),
+		ID:             name,
+		Conn:           conn,
+		rooms:          make(map[*Room]bool),
+		wsServer:       wsServer,
+		Send:           make(chan []byte),
+		userService:    wsServer.userService,
+		roomService:    wsServer.roomService,
+		messageService: wsServer.messageService,
 	}
 }
 
@@ -125,27 +132,37 @@ func (client *Client) writeMessage() {
 	}
 }
 
-func (client *Client) GetId() string {
-	return client.ID
+func (client *Client) connect() {
+	fmt.Println(client.ID)
+	err := client.userService.UpdateUserStatus(client.ID, true)
+	if err != nil {
+		fmt.Println("there is error while updating user status")
+	}
+	rooms, err := client.userService.GetAllRooms(client.ID)
+	if err != nil {
+		fmt.Println("error while fetching user rooms")
+	}
+	onlineRooms := client.wsServer.FindMultipleRoomByID(rooms)
+	for _, onlineRoom := range onlineRooms {
+		onlineRoom.Register <- client
+		client.rooms[onlineRoom] = true
+	}
 }
 
-// disconnect client from the websocket server and all the rooms he/she was present in
 func (client *Client) disconnect() {
-	client.wsServer.Unregister <- client
+	err := client.userService.UpdateUserStatus(client.ID, false)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("there is error while updating user status")
+	}
+	//todo
 	for room := range client.rooms {
 		room.Unregister <- client
-	}
-}
-
-func (client *Client) findRoomByID(ID string) *Room {
-	var Room *Room
-	for room := range client.rooms {
-		if room.GetId() == ID {
-			Room = room
-			break
+		if len(room.Clients) == 0 {
+			client.wsServer.DeleteRoom(room)
 		}
 	}
-	return Room
+	client.wsServer.Unregister <- client
 }
 
 func (client *Client) handleNewMessages(jsonMessage []byte) {
@@ -161,13 +178,21 @@ func (client *Client) handleNewMessages(jsonMessage []byte) {
 		//save the message in database over here
 		client.handleSendMessage(message)
 
+	case CreateRoomAction:
+		client.handleCreateRoom(message)
+
+	case DeleteRoomAction:
+		client.handleDeleteRoom(message)
+
+	case DeleteMessageAction:
+		client.handleDeleteMessage(message)
+
 	case JoinRoomAction:
 		client.handleJoinRoomMessage(message)
 
 	case LeaveRoomAction:
 		client.handleLeaveRoomMessage(message)
 	}
-	//  user online status message  to all the clients in the user room
 }
 
 func (client *Client) handleSendMessage(message Message) {
@@ -176,60 +201,224 @@ func (client *Client) handleSendMessage(message Message) {
 		println("The room you are trying to send message doesnot present")
 		return
 	}
+	dbMessage := models.MessageM{
+		Message:    message.Message,
+		Created_At: time.Now(),
+		Created_By: message.Sender,
+		Type:       message.Type,
+		Room_Id:    message.RoomId,
+	}
+	dbMessage, err := client.messageService.Create(dbMessage)
+	if err != nil {
+		fmt.Println("Error while deleting the message")
+		return
+	}
+	err = client.roomService.UpdateLastMessage(dbMessage.Room_Id, dbMessage.MessageId.Hex())
+	if err != nil {
+		fmt.Println("Error while deleting the message")
+		return
+	}
 	room.Broadcast <- &message
 }
 
-// if there is no id  in the message then create a new room in the database
-// otherwise search the room in ws server using id and if there is not room
-// search the room in database if not found throw error
-// if found create a room in wsserver and join this client
+func (client *Client) handleDeleteMessage(message Message) {
+	room := client.findRoomByID(message.RoomId)
+	if room == nil {
+		println("The room you are trying to delete message doesnot present")
+		return
+	}
+	err := client.messageService.Delete(message.MessageId)
+	if err != nil {
+		fmt.Println("Error while deleting the message")
+	}
 
-// there is another situation everytime when a user create a room . They create it with some user
-// so while there is no room id in it . it should gives us the clientid so that we know with
-// whom they want to create room
-// save another client with room in database and if another client is online then join the client in room
-
-func (client *Client) handleJoinRoomMessage(message Message) {
-	roomName := message.RoomId
-	client.joinRoom(roomName)
+	// todo update last message id in database if this message was last
+	room.Broadcast <- &message
 }
 
-//there should be another create room function
-
-func (client *Client) joinRoom(roomName string) {
-
-	room := client.wsServer.findRoomByID(roomName)
-	if room == nil {
-
-		room = client.wsServer.createRoom(roomName, false)
+func (client *Client) handleCreateRoom(message Message) {
+	var room models.Room
+	room = models.Room{
+		Name:       "Any room",
+		Createdby:  client.ID,
+		ModifeidAt: time.Now(),
+		StartedAt:  time.Now(),
 	}
-	//check if client is in the room (database)before or not
-	//if not add the room to this user
-	client.rooms[room] = true
-	room.Register <- client
+	room.Members = []string{client.ID}
+	if len(message.Members) == 0 {
+		fmt.Println("members are empty")
+	} else {
+		fmt.Println("There are members")
+		for _, member := range message.Members {
+			_, err := client.userService.FindOne(member)
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					fmt.Println("No user found")
+				} else {
+					fmt.Println("Some thing went wrong")
+				}
+				return
+			}
+			room.Members = append(room.Members, member)
+		}
+	}
+	room, err := client.roomService.Create(room)
+	if err != nil {
+		fmt.Println("cannot create room")
+	}
+	for _, member := range room.Members {
+		client.userService.AddRoom(member, room.RoomId.Hex())
+	}
+	wsRoom := client.wsServer.createRoom(message.RoomId, false)
+	Clients := client.wsServer.FindMultipleClientsByID(room.Members)
+	for _, clie := range Clients {
+		fmt.Println("this is the online client")
+		fmt.Println(clie)
+		wsRoom.Register <- clie
+		clie.rooms[wsRoom] = true
+	}
+	wsRoom.Broadcast <- &message
+}
+
+func (client *Client) handleDeleteRoom(message Message) {
+	members, err := client.roomService.GetAllMembers(message.RoomId)
+	if err != nil {
+		fmt.Println("there is no room")
+	}
+	for _, member := range members {
+		err := client.userService.DeleteRoom(member, message.RoomId)
+		if err != nil {
+			fmt.Println("error while delete")
+		}
+	}
+	err = client.roomService.DeleteAllMember(message.RoomId)
+	if err != nil {
+		fmt.Println("Error while deleting Members from room")
+	}
+}
+
+func (client *Client) handleJoinRoomMessage(message Message) {
+	err := client.roomService.AddMember(message.RoomId, message.Members[0])
+	if err != nil {
+		println("there is error while adding member to the databse")
+		return
+	}
+	err = client.userService.AddRoom(message.Members[0], message.RoomId)
+	if err != nil {
+		println("there is error while adding room to the user databse")
+		return
+	}
+	dbMessage := models.MessageM{
+		Message:    message.Message,
+		Created_At: time.Now(),
+		Created_By: message.Sender,
+		Type:       message.Type,
+		Room_Id:    message.RoomId,
+	}
+	dbMessage, err = client.messageService.Create(dbMessage)
+	if err != nil {
+		fmt.Println("Error while creating the message")
+		return
+	}
+	err = client.roomService.UpdateLastMessage(dbMessage.Room_Id, dbMessage.MessageId.Hex())
+	if err != nil {
+		fmt.Println("Error while updating messsage the message")
+		return
+	}
+	room := client.wsServer.findRoomByID(message.RoomId)
+	if room == nil {
+		members, err := client.roomService.GetAllMembers(message.RoomId)
+		if err != nil {
+			return
+		}
+		room = client.wsServer.createRoom(message.RoomId, false)
+		Clients := client.wsServer.FindMultipleClientsByID(members)
+		for _, clie := range Clients {
+			room.Register <- clie
+			clie.rooms[room] = true
+		}
+	}
+	room.Broadcast <- &message
 }
 
 func (client *Client) handleLeaveRoomMessage(message Message) {
-	// delete  this room from client in  the database
-	roomId := message.RoomId
-	room := client.wsServer.findRoomByID(roomId)
-	if _, ok := client.rooms[room]; ok {
-		delete(client.rooms, room)
+	err := client.roomService.DeleteMember(message.RoomId, message.Members[0])
+	if err != nil {
+		println("there is error while adding member to the databse")
+		return
 	}
-	room.Unregister <- client
-
-}
-
-func (client *Client) isInRoom(room *Room) bool {
-	if _, ok := client.rooms[room]; ok {
-		return true
+	err = client.userService.DeleteRoom(message.Members[0], message.RoomId)
+	if err != nil {
+		println("there is error while adding room to the user databse")
+		return
 	}
-	return false
-}
-
-// todo
-func (client *Client) registerClientsToMultipleRoom() {
-	// get the room from database and register the room
+	dbMessage := models.MessageM{
+		Message:    message.Message,
+		Created_At: time.Now(),
+		Created_By: message.Sender,
+		Type:       message.Type,
+		Room_Id:    message.RoomId,
+	}
+	dbMessage, err = client.messageService.Create(dbMessage)
+	if err != nil {
+		fmt.Println("Error while creating the message")
+		return
+	}
+	err = client.roomService.UpdateLastMessage(dbMessage.Room_Id, dbMessage.MessageId.Hex())
+	if err != nil {
+		fmt.Println("Error while updating messsage the message")
+		return
+	}
+	room := client.wsServer.findRoomByID(message.RoomId)
+	if room == nil {
+		members, err := client.roomService.GetAllMembers(message.RoomId)
+		if err != nil {
+			return
+		}
+		room = client.wsServer.createRoom(message.RoomId, false)
+		Clients := client.wsServer.FindMultipleClientsByID(members)
+		for _, clie := range Clients {
+			room.Register <- clie
+			clie.rooms[room] = true
+		}
+	}
+	room.Broadcast <- &message
 }
 
 // message read update -> to the databse and also to ther users  of that romm who are online
+func (client *Client) findRoomByID(roomID string) *Room {
+	var Room *Room
+	//find room in client itself
+	for room := range client.rooms {
+		if room.GetId() == roomID {
+			Room = room
+			break
+		}
+	}
+	if Room == nil {
+		// check if client is in the room
+		present, err := client.userService.IsRoomPresent(client.ID, roomID)
+		if err != nil {
+			fmt.Println("There is problem while finding room")
+			return nil
+		}
+		if present {
+			// check if room is in websocketserver
+			Room = client.wsServer.findRoomByID(roomID)
+			if Room == nil {
+				roo, err := client.roomService.FindOne(roomID)
+				if err != nil {
+					println("There is no room associated with the id")
+					return nil
+				}
+				Room = client.wsServer.createRoom(roo.RoomId.Hex(), false)
+				Clients := client.wsServer.FindMultipleClientsByID(roo.Members)
+				for _, clie := range Clients {
+					Room.Register <- clie
+					clie.rooms[Room] = true
+				}
+			}
+		}
+	}
+	return Room
+}
