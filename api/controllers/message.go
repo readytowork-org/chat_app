@@ -41,8 +41,7 @@ func (cc MessageController) Create(c *gin.Context) {
 		responses.HandleError(c, err)
 		return
 	}
-
-	err := cc.messageService.Create(message)
+	_, err := cc.messageService.Create(message)
 	if err != nil {
 		cc.logger.Zap.Error("Error creating message: ", err.Error())
 		responses.HandleError(c, err)

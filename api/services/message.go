@@ -22,7 +22,7 @@ func NewMessageService(
 	}
 }
 
-func (c MessageService) Create(message models.MessageM) error {
+func (c MessageService) Create(message models.MessageM) (models.MessageM, error) {
 	return c.messagerepository.Create(message)
 }
 

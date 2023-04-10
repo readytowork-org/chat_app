@@ -39,10 +39,10 @@ func (cc RoomController) Create(c *gin.Context) {
 		cc.logger.Zap.Error("Error creating room: [ShouldBingJSON]:", err.Error())
 		err = errors.BadRequest.Wrapf(err, "JSON Binding error")
 		responses.HandleError(c, err)
-		return
+		return	
 	}
 
-	err := cc.roomService.Create(room)
+	_, err := cc.roomService.Create(room)
 	if err != nil {
 		cc.logger.Zap.Error("Error creating room: ", err.Error())
 		responses.HandleError(c, err)
@@ -104,7 +104,7 @@ func (cc RoomController) FindOne(c *gin.Context) {
 		responses.HandleError(c, err)
 		return
 	}
-	
+
 	sd, err := cc.roomService.FindOne(id)
 	if err != nil {
 		cc.logger.Zap.Error("Error finding room: ", err.Error())

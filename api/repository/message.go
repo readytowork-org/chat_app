@@ -24,14 +24,15 @@ func NewMessageRepository(db infrastructure.Database, logger infrastructure.Logg
 	}
 }
 
-func (c MessageRepository) Create(message models.MessageM) error {
+func (c MessageRepository) Create(message models.MessageM) (models.MessageM, error) {
 	usersCollection := c.db.DB.Collection("messages")
-	_, err := usersCollection.InsertOne(context.TODO(), message)
+	result, err := usersCollection.InsertOne(context.TODO(), message)
 	if err != nil {
 		fmt.Println(err)
-		return err
+		return message, err
 	}
-	return nil
+	message.MessageId = result.InsertedID.(primitive.ObjectID)
+	return message, nil
 }
 
 func (c MessageRepository) Delete(id string) error {
